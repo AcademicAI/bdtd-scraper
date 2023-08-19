@@ -55,6 +55,7 @@ Exemplo de uso:
 """
 import functools
 import urllib.parse
+from typing import Generator
 
 import requests
 
@@ -62,6 +63,13 @@ from bdtd_scraper.constants import ENDPOINTS
 
 
 @functools.lru_cache(maxsize=128)
+def requests_get(url):
+    """Wrapper para requests.get que faz cache dos resultados."""
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json()
+
+
 def get_search_results(
     page: int = 1,
     **kwargs,
@@ -79,15 +87,18 @@ def get_search_results(
     params: dict = {
         "page": page,
         **default_params,  # type: ignore
-        **kwargs,
     }
-    url = f"{ENDPOINTS['search']['url']}?{urllib.parse.urlencode(params)}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+
+    for key, value in kwargs.items():
+        if isinstance(value, list):
+            params[key + "[]"] = value
+        else:
+            params[key] = value
+
+    url = f"{ENDPOINTS['search']['url']}?{urllib.parse.urlencode(params, doseq=True)}"
+    return requests_get(url)
 
 
-@functools.lru_cache(maxsize=128)
 def get_record(id: str, **kwargs) -> dict:
     """Retorna os metadados de um registro da BDTD.
 
@@ -101,9 +112,31 @@ def get_record(id: str, **kwargs) -> dict:
     params = {
         "id": id,
         **default_params,  # type: ignore
-        **kwargs,
     }
-    url = f"{ENDPOINTS['record']['url']}?{urllib.parse.urlencode(params)}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+
+    for key, value in kwargs.items():
+        if isinstance(value, list):
+            params[key + "[]"] = str(value)
+        else:
+            params[key] = value
+    url = f"{ENDPOINTS['record']['url']}?{urllib.parse.urlencode(params, doseq=True)}"
+    return requests_get(url)
+
+
+def get_all_results(**kwargs) -> Generator:
+    """Retorna todos os resultados da busca na BDTD.
+
+    Args:
+        page (int, optional): Número da página de resultados. Defaults to 1.
+
+    Returns:
+        dict: Dicionário com os resultados da busca.
+    """
+    page = 1
+    response = get_search_results(page=page, **kwargs)
+    limit = kwargs.get("limit", ENDPOINTS["search"]["params"]["limit"])  # type: ignore
+    n_pages = -(response["resultCount"] // -limit)
+    while page <= n_pages:
+        yield response["records"]
+        page += 1
+        response = get_search_results(page=page, **kwargs)
