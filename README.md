@@ -21,7 +21,7 @@ result = bdtd_scraper.api.get_search_results()
 print(result)
 
 # Retornar informações sobre um trabalho específico
-info = bdtd.api.get_record("P_RS_18810defd4deaf1d666c9c497b91d65f")
+info = bdtd_scraper.api.get_record("PUC_RIO-1_116b1dc174d74d0cdc7d451060e9129a")
 print(info)
 ```
 
