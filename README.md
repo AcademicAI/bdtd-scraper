@@ -1,7 +1,7 @@
 # bdtd-scraper
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Ferramenta para obter informações da Biblioteca Digital Brasileira de Teses e Dissertações
+Ferramenta para obter informações da Biblioteca Digital Brasileira de Teses e Dissertações.
 
 ## Instalação
 
@@ -11,7 +11,8 @@ pip install git+https://github.com/AcademicAI/bdtd-scraper.git
 
 ## Biblioteca Python
 
-### Busca simples
+### Biblioteca Digital de Teses e Dissertações
+#### Busca simples
 ```python
 import bdtd_scraper.api
 
@@ -21,9 +22,10 @@ print(result)
 
 # Retornar informações sobre um trabalho específico
 info = bdtd.api.get_record("P_RS_18810defd4deaf1d666c9c497b91d65f")
+print(info)
 ```
 
-### Parâmetros adicionais (**kwargs)
+#### Parâmetros adicionais (**kwargs)
 
 Essa ferramenta permite passar demais parâmetros usados na chamada da API da BDTD.
 
@@ -38,13 +40,34 @@ result = bdtd_scraper.api.get_search_results(
 print(result)
 ```
 
-### Obter resultados de várias páginas
+#### Obter resultados de várias páginas
 ```python
-import bdtd_scraper.api
-
 results = []
 for records in bdtd_scraper.api.get_all_results(lookfor="bumba meu boi", limit=100):
     results.extend(records)
 
 print(len(results))
+```
+
+### Acessando trabalhos nos repositórios
+#### Obter links de um trabalho
+
+Buscar prováveis links de um trabalho em um repositório de uma universidade. Recebe como argumento a URL do trabalho e retorna uma lista com os links encontrados. Pode ser informado uma das URLs retornadas pelo `bdtd_scraper.api.get_search_results`.
+
+```python
+from bdtd_scraper import theses_downloader
+
+url = 'https://doi.org/10.17771/PUCRio.acad.55901'
+links = theses_downloader.get_most_probable_thesis_links(url)
+for link in links:
+    print(link)
+
+# https://www.maxwell.vrac.puc-rio.br/55901/55901.PDF
+```
+#### Fazer download de um arquivo
+
+Realiza o download do arquivo com o nome informado.
+
+```python
+theses_downloader.download_pdf(links[0], "example.pdf")
 ```

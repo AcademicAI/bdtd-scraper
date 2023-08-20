@@ -1,4 +1,9 @@
 repos:
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.0
+    hooks:
+    -   id: autoflake
+        args: [--remove-all-unused-imports, --remove-unused-variables, --in-place]
 -   repo: https://github.com/jendrikseipp/vulture
     rev: v2.8
     hooks:
